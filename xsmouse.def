@@ -1,0 +1,5 @@
+library XSMOUSE
+description 'XSMOUSE.SYS, Copyright (C)2010, W.M.Brul, NL1422CG25.'
+protmode
+segments '_DATA' class 'DATA'
+segments '_TEXT' class 'CODE'

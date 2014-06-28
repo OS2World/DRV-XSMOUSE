@@ -1,0 +1,245 @@
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿                             ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ Emulate Mouse Driver for OS/2 ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´ XSMOUSE00.ZIP ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ                             ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+ Provides a device driver to send absolute mouse events into the OS/2 system.
+ It has been specifically designed to ease the development and integration of
+ touch screen solutions into the OS/2 system. Made in Holland by Wim Brul.
+
+ Consists of XSMOUSE.TXT (this text file) and XSMOUSE.SYS (the device driver),
+ GETEVENT.CMD (a read event example) and PUTEVENT.CMD (a write event example).
+
+ May be freely used and exchanged, as long as it is not modified. You may
+ use this product solely at your own risk. I cannot be held responsible for
+ any damages occurring due to your using this product. You may not lease,
+ rent or sell this product to any other party. Have fun.
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ Description ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+ This driver enables you to send mouse events into the system. It provides an
+ application programming interface that conforms to the standard DosRead and
+ DosWrite functions and as such may be easily used from rexx procedures using
+ the charin and charout functions. It has been specifically designed to ease
+ the development and integration of touch screen solutions into the system.
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ Installation ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+ Move the XSMOUSE00.ZIP file into a directory of your choice and unzip it.
+ Copy the XSMOUSE.SYS file to your C:\OS2\BOOT directory.
+ Modify your CONFIG.SYS file to contain DEVICE=C:\OS2\BOOT\XSMOUSE.SYS and
+ DEVICE=C:\OS2\BOOT\MOUSE.SYS STYPE=XSMOUSE$ statements in that order and
+ restart your system. XSMOUSE$ will be the device driver name to be used.
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ Common Event Buffer ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+ The common event buffer is used to send absolute mouse events to mouse.sys
+ like this is usually done for touch screens.
+
+ ÚÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+ ³ field ³ size ³ description        ³
+ ÃÄÄÄÄÄÄÄÅÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´
+ ³ Event ³ word ³ mouse event flags  ³
+ ³ yPos  ³ word ³ current y position ³
+ ³ xPos  ³ word ³ current x position ³
+ ³ yMax  ³ word ³ maximum y position ³
+ ³ xMax  ³ word ³ maximum x position ³
+ ÀÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+ Positions are measured in absolute coordinates.
+ The coordinate position 0,0 represent the top left corner of the screen and
+ the coordinate position yMax,xMax represent the bottom right corner of the
+ screen and these are mapped by mouse.sys into the current display mode.
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ Absolute Mouse Events ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+ To report button states when the mouse stays at the old coordinate position
+ use the mouse event flags listed under Old Position.
+
+        Old Position               New Position
+ ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄ¿ ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄ¿
+ ³ button state   ³ flag  ³ ³ button state   ³ flag  ³
+ ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄ´ ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄ´
+ ³ all buttons up ³ 0000h ³ ³ all buttons up ³ 0001h ³
+ ³ button 1 down  ³ 0004h ³ ³ button 1 down  ³ 0002h ³
+ ³ button 2 down  ³ 0010h ³ ³ button 2 down  ³ 0008h ³
+ ³ button 3 down  ³ 0040h ³ ³ button 3 down  ³ 0020h ³
+ ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÙ ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÙ
+
+ To report button states when the mouse moves to the new coordinate position
+ use the mouse event flags listed under New Position.
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ GETEVENT.CMD ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+ This rexx example file reads the last pointing device event from the common
+ event buffer and displays it in hexadecimal format.
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ PUTEVENT.CMD ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+ This rexx example file writes the absolute pointing device event which moves
+ the pointer to the center of the screen into the common event buffer and
+ displays it in hexadecimal format.
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ Prototyping Interface ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+ The prototyping interface uses OS/2 Procedures language 2/REXX functions.
+ To emulate the mouse the following functions are described:
+
+ ş Acquire Driver
+ ş Read Mouse Event
+ ş Write Mouse Event
+ ş Release Driver
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ Acquire Driver ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+ rc=stream(sName,'command','open');
+
+ Opens the device driver with read/write access for this process and denies
+ read/write access to all other processes as required by the device driver.
+ The device driver relies on standard file system access and sharing rules
+ for contention control and does not use the notification of the open.
+
+ sName - Name of the device driver to be opened.
+
+ rc - Return Code. See the OS/2 Procedures Language 2/REXX Reference
+      for the standard strings returned.
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ Read Mouse Event ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+ Buffer=charin(sName,,10);
+
+ Reads the last pointing device event from the common event buffer.
+
+ sName - Name of the device driver to be used. Must be XSMOUSE$
+
+ sBuffer - Name of the buffer to receive the common event buffer content.
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ Write Mouse Event ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+ rc=charout(sName,sBuffer);
+
+ Writes the absolute pointing device event into the common event buffer.
+
+ sName - Name of the device driver to be used. Must be XSMOUSE$
+
+ sBuffer - Name of the buffer containing the absolute pointing device event.
+
+ rc - Return Code. See the OS/2 Procedures Language 2/REXX Reference
+      for the standard strings returned.
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ Release Driver ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+ rc=stream(sName,'command','close');
+
+ Closes the device driver and allows read/write access to other processes.
+ The device driver relies on standard file system access and sharing rules
+ for contention control and does not use the notification of the close.
+
+ sName - Name of the device driver to be closed.
+
+ rc - Return Code. See the OS/2 Procedures Language 2/REXX Reference
+      for the standard strings returned.
+
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ Application Programming Interface ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+
+ The application program interface uses OS/2 Control Program functions.
+ To emulate the mouse the following functions are described:
+
+ ş DosOpen
+ ş DosRead
+ ş DosWrite
+ ş DosClose
+
+ÚÄÄÄÄÄÄÄÄÄ¿
+³ DosOpen ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+ÀÄÄÄÄÄÄÄÄÄÙ
+
+ ulrc=DosOpen(pszName,phDevice,pulAction,0,0,1,18,0);
+
+ Opens the device driver with read/write access for this process and denies
+ read/write access to all other processes as required by the device driver.
+ The device driver relies on standard file system access and sharing rules
+ for contention control and does not use the notification of the open.
+
+ pszName - Address of the asciiz name of the device driver to be opened.
+
+ phDevice - Address of the variable to receive the device handle.
+
+ pulAction - Address of the variable to receive the action taken.
+
+ ulrc - Return Code. See the Control Program Guide and Reference
+        for the standard values returned.
+
+ÚÄÄÄÄÄÄÄÄÄ¿
+³ DosRead ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+ÀÄÄÄÄÄÄÄÄÄÙ
+
+ ulrc=DosRead(hDevice,pBuffer,10,pcbDone);
+
+ Reads the last pointing device event from the common event buffer.
+
+ hDevice - The device handle obtained from a previous call to DosOpen.
+
+ pBuffer - Address of the buffer to receive the common event buffer content.
+
+ pcbDone - Address of the variable to receive the number of bytes (10).
+
+ ulrc - Return Code. See the Control Program Guide and Reference
+        for the standard values returned.
+
+ÚÄÄÄÄÄÄÄÄÄÄ¿
+³ DosWrite ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+ÀÄÄÄÄÄÄÄÄÄÄÙ
+
+ ulrc=DosWrite(hDevice,pBuffer,10,pcbDone);
+
+ Writes the absolute pointing device event into the common event buffer.
+
+ hDevice - The device handle obtained from a previous call to DosOpen.
+
+ pBuffer - Address of the buffer containing the absolute pointing device event.
+
+ pcbDone - Address of the variable to receive the number of bytes (10).
+
+ ulrc - Return Code. See the Control Program Guide and Reference
+        for the standard values returned.
+
+ÚÄÄÄÄÄÄÄÄÄÄ¿
+³ DosClose ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
+ÀÄÄÄÄÄÄÄÄÄÄÙ
+
+ ulrc=DosClose(hDevice);
+
+ Closes the device driver and allows read/write access to other processes.
+ The device driver relies on standard file system access and sharing rules
+ for contention control and does not use the notification of the close.
+
+ hDevice - The device handle obtained from a previous call to DosOpen.
+
+ ulrc - Return Code. See the Control Program Guide and Reference
+        for the standard values returned.
+
