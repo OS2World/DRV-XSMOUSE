@@ -7,7 +7,7 @@ extrn Dos16Write:far
 dataseg
 ; device driver header
 hdrlnk dd 0FFFFFFFFh
-hdratr dw 0D080h
+hdratr dw 0C080h
 hdrstr dw offset(strategy)
 hdridc dw offset(idcentry)
 hdrddn db "XSMOUSE$"
@@ -60,13 +60,27 @@ label NotReadEnable near
   ret ; return
 endp idcentry
 
+dataseg
+MouseSem dd 0
+
 codeseg
 proc IssueIoRequest near
 ; verify access possible
   cmp [ReadEnabled],1
   mov al,03h ; unrecognized
-  jne NotIssueIoRequest
-; obtain buffer address
+  jne EndIssueIoRequest
+; request mouse semaphore
+  push bx cx ; save registers
+  mov ax,ds ; data selector
+  mov bx,offset(MouseSem)
+  mov cx,-1 ; <waitforever
+  mov di,cx ; >waitforever
+  mov dl,06h ; semrequest
+  call [devhlp] ; helper
+  pop cx bx ; restore registers
+  mov ax,810Ch ; error/done/general
+  jc EndIssueIoRequest ; failure
+; obtain data buffer address
   push bx ; save register
   mov si,[gdtsel] ; gdtselector
   mov ax,[word(es:bx+16)] ; >address
@@ -75,8 +89,9 @@ proc IssueIoRequest near
   call [devhlp] ; helper
   pop bx ; restore register
   mov ax,810Ch ; error/done/general
-  jc NotIssueIoRequest ; failure
+  jc ReleaseSemaphore ; failure
   push es ds ; save registers
+  cld ; increment indexes
 ; process read mouse packet
   cmp [byte(es:bx+02)],04h
   jne NotProcessRead ; write
@@ -85,11 +100,8 @@ proc IssueIoRequest near
   mov es,si ; target selector
   mov si,[PacketOffset] ; offset
   mov ds,[idcepi+10] ; selector
-  cld ; increment indexes
-  cli ; disable interrupts
   rep movsb ; mouse event
-  sti ; enable interrupts
-  jmp EndIssueIoRequest
+  jmp DoneIssueIoRequest
 label NotProcessRead near
 ; process write mouse packet
   mov dx,ds ; data selector
@@ -98,10 +110,7 @@ label NotProcessRead near
   mov di,[PacketOffset] ; offset
   mov ds,si ; source selector
   sub si,si ; source offset
-  cld ; increment indexes
-  cli ; disable interrupts
   rep movsb ; mouse event
-  sti ; enable interrupts
 ; issue process absolute
   mov ax,0003h ; request
 ; obtain mouse entry point
@@ -114,11 +123,20 @@ label NotProcessRead near
   push bx ; save register
   call [dword(es:di)]
   pop bx ; restore register
-label EndIssueIoRequest near
+label DoneIssueIoRequest near
   pop ds es ; restore registers
-; set success status code
-  mov ax,0100h ; ok/done
-label NotissueIoRequest near
+  mov ax,0100h ; success/done
+label ReleaseSemaphore near
+; release mouse semaphore
+  push ax bx ; save register
+  mov ax,ds ; data selector
+  mov bx,offset(MouseSem)
+  mov dl,07h ; semclear
+  call [devhlp] ; helper
+  pop bx ax ; restore register
+  jnc EndIssueIoRequest ; success
+  mov ax,810Ch ; error/done/general
+label EndIssueIoRequest near
   ret ; return
 endp IssueIoRequest
 
@@ -171,8 +189,8 @@ label EndData byte
 
 dataseg
 InitMsg0 db "XSMOUSE.SYS - "
-InitMsg1 db "Specified driver name NOT available",13,10
-InitMsg2 db "Required GDT selector NOT available",13,10
+InitMsg1 db "Attach Driver NOT possible",13,10
+InitMsg2 db "GDT selector NOT available",13,10
 InitMsg3 db "Emulate Mouse Driver",13,10
 label InitMsg4 byte
 Written dw 0

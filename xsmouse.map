@@ -2,8 +2,8 @@
  XSMOUSE
 
  Start     Length     Name                   Class
- 0001:0000 000A7H     _DATA                  DATA
- 0002:0000 00159H     _TEXT                  CODE
+ 0001:0000 00099H     _DATA                  DATA
+ 0002:0000 00183H     _TEXT                  CODE
 
  Origin   Group
  0001:0   DGROUP

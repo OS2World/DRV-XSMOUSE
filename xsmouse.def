@@ -1,5 +1,5 @@
 library XSMOUSE
-description 'XSMOUSE.SYS, Copyright (C)2010, W.M.Brul, NL1422CG25.'
+description '@#W.M.Brul:10.20150522#@Emulate Mouse Driver'
 protmode
 segments '_DATA' class 'DATA'
 segments '_TEXT' class 'CODE'

@@ -1,4 +1,4 @@
-Turbo Assembler	 Version 4.1	    07-05-10 15:19:41	    Page 1
+Turbo Assembler	 Version 4.1	    09-05-15 18:44:15	    Page 1
 xsmouse.asm
 
 
@@ -12,8 +12,8 @@ xsmouse.asm
       7	    0000			 dataseg
       8					 ; device driver header
       9	    0000  FFFFFFFF		 hdrlnk	dd 0FFFFFFFFh
-     10	    0004  D080			 hdratr	dw 0D080h
-     11	    0006  0095r			 hdrstr	dw offset(strategy)
+     10	    0004  C080			 hdratr	dw 0C080h
+     11	    0006  00BFr			 hdrstr	dw offset(strategy)
      12	    0008  0000r			 hdridc	dw offset(idcentry)
      13	    000A  58 53	4D 4F 55 53 45+	 hdrddn	db "XSMOUSE$"
      14		  24
@@ -60,7 +60,7 @@ xsmouse.asm
      55	    001E  72 05			   jc EndReadEnable ; no
      56	    0020  C6 06	0036r 01	   mov [ReadEnabled],1
      57	    0025			 Label EndReadEnable near
-Turbo Assembler	 Version 4.1	    07-05-10 15:19:41	    Page 2
+Turbo Assembler	 Version 4.1	    09-05-15 18:44:15	    Page 2
 xsmouse.asm
 
 
@@ -72,225 +72,239 @@ xsmouse.asm
      62	    002A  CB			   ret ; return
      63	    002B			 endp idcentry
      64
-     65	    002B			 codeseg
-     66	    002B			 proc IssueIoRequest near
-     67					 ; verify access possible
-     68	    002B  80 3E	0036r 01	   cmp [ReadEnabled],1
-     69	    0030  B0 03			   mov al,03h ;	unrecognized
-     70	    0032  75 60			   jne NotIssueIoRequest
-     71					 ; obtain buffer address
-     72	    0034  53			   push	bx ; save register
-     73	    0035  8B 36	001Er		   mov si,[gdtsel] ; gdtselector
-     74	    0039  26: 8B 47 10		   mov ax,[word(es:bx+16)] ; >address
-     75	    003D  26: 8B 5F 0E		   mov bx,[word(es:bx+14)] ; <address
-     76	    0041  B2 2E			   mov dl,2Eh ;	phystogdtselector
-     77	    0043  FF 1E	001Ar		   call	[devhlp] ; helper
-     78	    0047  5B			   pop bx ; restore register
-     79	    0048  B8 810C		   mov ax,810Ch	; error/done/general
-     80	    004B  72 47			   jc NotIssueIoRequest	; failure
-     81	    004D  06 1E			   push	es ds ;	save registers
-     82					 ; process read	mouse packet
-     83	    004F  26: 80 7F 02 04	   cmp [byte(es:bx+02)],04h
-     84	    0054  75 13			   jne NotProcessRead ;	write
-     85					 ; obtain absolute event packet
-     86	    0056  2B FF			   sub di,di ; target offset
-     87	    0058  8E C6			   mov es,si ; target selector
-     88	    005A  8B 36	0034r		   mov si,[PacketOffset] ; offset
-     89	    005E  8E 1E	0032r		   mov ds,[idcepi+10] ;	selector
-     90	    0062  FC			   cld ; increment indexes
-     91	    0063  FA			   cli ; disable interrupts
-     92	    0064  F3> A4		   rep movsb ; mouse event
-     93	    0066  FB			   sti ; enable	interrupts
-     94	    0067  EB 26			   jmp EndIssueIoRequest
-     95	    0069			 label NotProcessRead near
-     96					 ; process write mouse packet
-     97	    0069  8C DA			   mov dx,ds ; data selector
-     98					 ; supply absolute event packet
-     99	    006B  8E 06	0032r		   mov es,[idcepi+10] ;	selector
-    100	    006F  8B 3E	0034r		   mov di,[PacketOffset] ; offset
-    101	    0073  8E DE			   mov ds,si ; source selector
-    102	    0075  2B F6			   sub si,si ; source offset
-    103	    0077  FC			   cld ; increment indexes
-    104	    0078  FA			   cli ; disable interrupts
-    105	    0079  F3> A4		   rep movsb ; mouse event
-    106	    007B  FB			   sti ; enable	interrupts
-    107					 ; issue process absolute
-    108	    007C  B8 0003		   mov ax,0003h	; request
-    109					 ; obtain mouse	entry point
-    110	    007F  8E DA			   mov ds,dx ; data selector
-    111	    0081  8E C2			   mov es,dx ; data selector
-    112	    0083  BF 002Er		   lea di,[idcepi+06] ;	target
-    113					 ; provide mouse data selector
-    114	    0086  8E 1E	0032r		   mov ds,[idcepi+10] ;	selector
-Turbo Assembler	 Version 4.1	    07-05-10 15:19:41	    Page 3
+     65	    002B			 dataseg
+     66	    0037  00000000		 MouseSem dd 0
+     67
+     68	    003B			 codeseg
+     69	    002B			 proc IssueIoRequest near
+     70					 ; verify access possible
+     71	    002B  80 3E	0036r 01	   cmp [ReadEnabled],1
+     72	    0030  B0 03			   mov al,03h ;	unrecognized
+     73	    0032  0F 85	0088		   jne EndIssueIoRequest
+     74					 ; request mouse semaphore
+     75	    0036  53 51			   push	bx cx ;	save registers
+     76	    0038  8C D8			   mov ax,ds ; data selector
+     77	    003A  BB 0037r		   mov bx,offset(MouseSem)
+     78	    003D  B9 FFFF		   mov cx,-1 ; <waitforever
+     79	    0040  8B F9			   mov di,cx ; >waitforever
+     80	    0042  B2 06			   mov dl,06h ;	semrequest
+     81	    0044  FF 1E	001Ar		   call	[devhlp] ; helper
+     82	    0048  59 5B			   pop cx bx ; restore registers
+     83	    004A  B8 810C		   mov ax,810Ch	; error/done/general
+     84	    004D  72 6F			   jc EndIssueIoRequest	; failure
+     85					 ; obtain data buffer address
+     86	    004F  53			   push	bx ; save register
+     87	    0050  8B 36	001Er		   mov si,[gdtsel] ; gdtselector
+     88	    0054  26: 8B 47 10		   mov ax,[word(es:bx+16)] ; >address
+     89	    0058  26: 8B 5F 0E		   mov bx,[word(es:bx+14)] ; <address
+     90	    005C  B2 2E			   mov dl,2Eh ;	phystogdtselector
+     91	    005E  FF 1E	001Ar		   call	[devhlp] ; helper
+     92	    0062  5B			   pop bx ; restore register
+     93	    0063  B8 810C		   mov ax,810Ch	; error/done/general
+     94	    0066  72 42			   jc ReleaseSemaphore ; failure
+     95	    0068  06 1E			   push	es ds ;	save registers
+     96	    006A  FC			   cld ; increment indexes
+     97					 ; process read	mouse packet
+     98	    006B  26: 80 7F 02 04	   cmp [byte(es:bx+02)],04h
+     99	    0070  75 10			   jne NotProcessRead ;	write
+    100					 ; obtain absolute event packet
+    101	    0072  2B FF			   sub di,di ; target offset
+    102	    0074  8E C6			   mov es,si ; target selector
+    103	    0076  8B 36	0034r		   mov si,[PacketOffset] ; offset
+    104	    007A  8E 1E	0032r		   mov ds,[idcepi+10] ;	selector
+    105	    007E  F3> A4		   rep movsb ; mouse event
+    106	    0080  EB 23			   jmp DoneIssueIoRequest
+    107	    0082			 label NotProcessRead near
+    108					 ; process write mouse packet
+    109	    0082  8C DA			   mov dx,ds ; data selector
+    110					 ; supply absolute event packet
+    111	    0084  8E 06	0032r		   mov es,[idcepi+10] ;	selector
+    112	    0088  8B 3E	0034r		   mov di,[PacketOffset] ; offset
+    113	    008C  8E DE			   mov ds,si ; source selector
+    114	    008E  2B F6			   sub si,si ; source offset
+Turbo Assembler	 Version 4.1	    09-05-15 18:44:15	    Page 3
 xsmouse.asm
 
 
 
-    115					 ; invoke mouse	device driver
-    116	    008A  53			   push	bx ; save register
-    117	    008B  26: FF 1D		   call	[dword(es:di)]
-    118	    008E  5B			   pop bx ; restore register
-    119	    008F			 label EndIssueIoRequest near
-    120	    008F  1F 07			   pop ds es ; restore registers
-    121					 ; set success status code
-    122	    0091  B8 0100		   mov ax,0100h	; ok/done
-    123	    0094			 label NotissueIoRequest near
-    124	    0094  C3			   ret ; return
-    125	    0095			 endp IssueIoRequest
-    126
-    127	    0095			 codeseg
-    128	    0095			 proc strategy far
-    129					 ; set parm failure status code
-    130	    0095  B8 8113		   mov ax,8113h	; error/done/parm
-    131					 ; obtain driver request code
-    132	    0098  26: 8A 4F 02		   mov cl,[es:bx+02] ; request
-    133					 ; handle doswrite request
-    134	    009C  80 F9	08		   cmp cl,08h ;	write normal
-    135	    009F  72 13			   jb NotDosWrite ; other
-    136	    00A1  80 F9	09		   cmp cl,09h ;	write verify
-    137	    00A4  77 0E			   ja NotDosWrite ; other
-    138					 ; verify buffer length
-    139	    00A6  26: 8B 4F 12		   mov cx,[word(es:bx+18)]
-    140	    00AA  83 F9	0A		   cmp cx,10 ; proper length
-    141	    00AD  75 1D			   jne EndStrategy ; failure
-    142					 ; issue write operation
-    143	    00AF  E8 FF79		   call	IssueIoRequest
-    144	    00B2  EB 18			   jmp EndStrategy ; done
-    145	    00B4			 label NotDosWrite near
-    146					 ; handle dosread request
-    147	    00B4  80 F9	04		   cmp cl,04h ;	read normal
-    148	    00B7  75 0E			   jne NotDosRead ; other
-    149					 ; verify buffer length
-    150	    00B9  26: 8B 4F 12		   mov cx,[word(es:bx+18)]
-    151	    00BD  83 F9	0A		   cmp cx,10 ; proper length
-    152	    00C0  75 0A			   jne EndStrategy ; failure
-    153					 ; issue read operation
-    154	    00C2  E8 FF66		   call	IssueIoRequest
-    155	    00C5  EB 05			   jmp EndStrategy ; done
-    156	    00C7			 label NotDosRead near
-    157					 ; handle initialization
-    158	    00C7  80 F9	00		   cmp cl,00h ;	initialize
-    159	    00CA  74 05			   je Initialize ; once
-    160	    00CC			 label EndStrategy near
-    161					 ; return status code
-    162	    00CC  26: 89 47 03		   mov [es:bx+03],ax
-    163	    00D0  CB			   ret ; return
-    164	    00D1			 endp strategy
-    165
-    166	    00D1			 codeseg
-    167					 ; end of code segment
-    168	    00D1			 label EndCode near
-    169
-    170	    00D1			 dataseg
-    171					 ; end of data segment
-Turbo Assembler	 Version 4.1	    07-05-10 15:19:41	    Page 4
+    115	    0090  F3> A4		   rep movsb ; mouse event
+    116					 ; issue process absolute
+    117	    0092  B8 0003		   mov ax,0003h	; request
+    118					 ; obtain mouse	entry point
+    119	    0095  8E DA			   mov ds,dx ; data selector
+    120	    0097  8E C2			   mov es,dx ; data selector
+    121	    0099  BF 002Er		   lea di,[idcepi+06] ;	target
+    122					 ; provide mouse data selector
+    123	    009C  8E 1E	0032r		   mov ds,[idcepi+10] ;	selector
+    124					 ; invoke mouse	device driver
+    125	    00A0  53			   push	bx ; save register
+    126	    00A1  26: FF 1D		   call	[dword(es:di)]
+    127	    00A4  5B			   pop bx ; restore register
+    128	    00A5			 label DoneIssueIoRequest near
+    129	    00A5  1F 07			   pop ds es ; restore registers
+    130	    00A7  B8 0100		   mov ax,0100h	; success/done
+    131	    00AA			 label ReleaseSemaphore	near
+    132					 ; release mouse semaphore
+    133	    00AA  50 53			   push	ax bx ;	save register
+    134	    00AC  8C D8			   mov ax,ds ; data selector
+    135	    00AE  BB 0037r		   mov bx,offset(MouseSem)
+    136	    00B1  B2 07			   mov dl,07h ;	semclear
+    137	    00B3  FF 1E	001Ar		   call	[devhlp] ; helper
+    138	    00B7  5B 58			   pop bx ax ; restore register
+    139	    00B9  73 03			   jnc EndIssueIoRequest ; success
+    140	    00BB  B8 810C		   mov ax,810Ch	; error/done/general
+    141	    00BE			 label EndIssueIoRequest near
+    142	    00BE  C3			   ret ; return
+    143	    00BF			 endp IssueIoRequest
+    144
+    145	    00BF			 codeseg
+    146	    00BF			 proc strategy far
+    147					 ; set parm failure status code
+    148	    00BF  B8 8113		   mov ax,8113h	; error/done/parm
+    149					 ; obtain driver request code
+    150	    00C2  26: 8A 4F 02		   mov cl,[es:bx+02] ; request
+    151					 ; handle doswrite request
+    152	    00C6  80 F9	08		   cmp cl,08h ;	write normal
+    153	    00C9  72 13			   jb NotDosWrite ; other
+    154	    00CB  80 F9	09		   cmp cl,09h ;	write verify
+    155	    00CE  77 0E			   ja NotDosWrite ; other
+    156					 ; verify buffer length
+    157	    00D0  26: 8B 4F 12		   mov cx,[word(es:bx+18)]
+    158	    00D4  83 F9	0A		   cmp cx,10 ; proper length
+    159	    00D7  75 1D			   jne EndStrategy ; failure
+    160					 ; issue write operation
+    161	    00D9  E8 FF4F		   call	IssueIoRequest
+    162	    00DC  EB 18			   jmp EndStrategy ; done
+    163	    00DE			 label NotDosWrite near
+    164					 ; handle dosread request
+    165	    00DE  80 F9	04		   cmp cl,04h ;	read normal
+    166	    00E1  75 0E			   jne NotDosRead ; other
+    167					 ; verify buffer length
+    168	    00E3  26: 8B 4F 12		   mov cx,[word(es:bx+18)]
+    169	    00E7  83 F9	0A		   cmp cx,10 ; proper length
+    170	    00EA  75 0A			   jne EndStrategy ; failure
+    171					 ; issue read operation
+Turbo Assembler	 Version 4.1	    09-05-15 18:44:15	    Page 4
 xsmouse.asm
 
 
 
-    172	    0037			 label EndData byte
-    173
-    174	    0037			 dataseg
-    175	    0037  58 53	4D 4F 55 53 45+	 InitMsg0 db "XSMOUSE.SYS - "
-    176		  2E 53	59 53 20 2D 20
-    177	    0045  53 70	65 63 69 66 69+	 InitMsg1 db "Specified	driver name NOT	available",13,10
-    178		  65 64	20 64 72 69 76+
-    179		  65 72	20 6E 61 6D 65+
-    180		  20 4E	4F 54 20 61 76+
-    181		  61 69	6C 61 62 6C 65+
-    182		  0D 0A
-    183	    006A  52 65	71 75 69 72 65+	 InitMsg2 db "Required GDT selector NOT	available",13,10
-    184		  64 20	47 44 54 20 73+
-    185		  65 6C	65 63 74 6F 72+
-    186		  20 4E	4F 54 20 61 76+
-    187		  61 69	6C 61 62 6C 65+
-    188		  0D 0A
-    189	    008F  45 6D	75 6C 61 74 65+	 InitMsg3 db "Emulate Mouse Driver",13,10
-    190		  20 4D	6F 75 73 65 20+
-    191		  44 72	69 76 65 72 0D+
-    192		  0A
-    193	    00A5			 label InitMsg4	byte
-    194	    00A5  0000			 Written dw 0
-    195
-    196	    00A7			 codeseg
-    197	    00D1			 proc Initialize near
-    198					 ; save	devhlp entry point
-    199	    00D1  26: 8B 47 0E		   mov ax,[es:bx+14]
-    200	    00D5  A3 001Ar		   mov [word(devhlp+00)],ax
-    201	    00D8  26: 8B 47 10		   mov ax,[es:bx+16]
-    202	    00DC  A3 001Cr		   mov [word(devhlp+02)],ax
-    203					 ; reduce module size
-    204	    00DF  B8 00D1r		   mov ax,offset(EndCode)
-    205	    00E2  26: 89 47 0E		   mov [es:bx+14],ax
-    206	    00E6  B8 0037r		   mov ax,offset(EndData)
-    207	    00E9  26: 89 47 10		   mov [es:bx+16],ax
-    208					 ; write startup message
-    209	    00ED  BE 000E		   mov si,InitMsg1-InitMsg0
-    210	    00F0  BF 0037r		   mov di,offset(InitMsg0)
-    211	    00F3  E8 0054		   call	IssueMessage
-    212					 ; verify driver ddname
-    213	    00F6  53			   push	bx ; save register
-    214	    00F7  BB 000Ar		   mov bx,offset(hdrddn)
-    215	    00FA  BF 0028r		   mov di,offset(idcepi)
-    216	    00FD  B2 2A			   mov dl,2Ah ;	attachdd
-    217	    00FF  FF 1E	001Ar		   call	[devhlp] ; helper
-    218	    0103  5B			   pop bx ; restore register
-    219	    0104  BE 0025		   mov si,InitMsg2-InitMsg1
-    220	    0107  BF 0045r		   mov di,offset(InitMsg1)
-    221	    010A  73 28			   jnc InitFailure ; used
-    222					 ; allocate GDT	selector
-    223	    010C  06			   push	es ; save register
-    224	    010D  8E 06	001Er		   mov es,[gdtsel] ; selector
-    225	    0111  BF 001Er		   mov di,offset(gdtsel) ; offset
-    226	    0114  B2 2D			   mov dl,2Dh ;	allocgdtselector
-    227	    0116  B9 0001		   mov cx,0001h	; one selector
-    228	    0119  FF 1E	001Ar		   call	[devhlp] ; helper
-Turbo Assembler	 Version 4.1	    07-05-10 15:19:41	    Page 5
+    172	    00EC  E8 FF3C		   call	IssueIoRequest
+    173	    00EF  EB 05			   jmp EndStrategy ; done
+    174	    00F1			 label NotDosRead near
+    175					 ; handle initialization
+    176	    00F1  80 F9	00		   cmp cl,00h ;	initialize
+    177	    00F4  74 05			   je Initialize ; once
+    178	    00F6			 label EndStrategy near
+    179					 ; return status code
+    180	    00F6  26: 89 47 03		   mov [es:bx+03],ax
+    181	    00FA  CB			   ret ; return
+    182	    00FB			 endp strategy
+    183
+    184	    00FB			 codeseg
+    185					 ; end of code segment
+    186	    00FB			 label EndCode near
+    187
+    188	    00FB			 dataseg
+    189					 ; end of data segment
+    190	    003B			 label EndData byte
+    191
+    192	    003B			 dataseg
+    193	    003B  58 53	4D 4F 55 53 45+	 InitMsg0 db "XSMOUSE.SYS - "
+    194		  2E 53	59 53 20 2D 20
+    195	    0049  41 74	74 61 63 68 20+	 InitMsg1 db "Attach Driver NOT	possible",13,10
+    196		  44 72	69 76 65 72 20+
+    197		  4E 4F	54 20 70 6F 73+
+    198		  73 69	62 6C 65 0D 0A
+    199	    0065  47 44	54 20 73 65 6C+	 InitMsg2 db "GDT selector NOT available",13,10
+    200		  65 63	74 6F 72 20 4E+
+    201		  4F 54	20 61 76 61 69+
+    202		  6C 61	62 6C 65 0D 0A
+    203	    0081  45 6D	75 6C 61 74 65+	 InitMsg3 db "Emulate Mouse Driver",13,10
+    204		  20 4D	6F 75 73 65 20+
+    205		  44 72	69 76 65 72 0D+
+    206		  0A
+    207	    0097			 label InitMsg4	byte
+    208	    0097  0000			 Written dw 0
+    209
+    210	    0099			 codeseg
+    211	    00FB			 proc Initialize near
+    212					 ; save	devhlp entry point
+    213	    00FB  26: 8B 47 0E		   mov ax,[es:bx+14]
+    214	    00FF  A3 001Ar		   mov [word(devhlp+00)],ax
+    215	    0102  26: 8B 47 10		   mov ax,[es:bx+16]
+    216	    0106  A3 001Cr		   mov [word(devhlp+02)],ax
+    217					 ; reduce module size
+    218	    0109  B8 00FBr		   mov ax,offset(EndCode)
+    219	    010C  26: 89 47 0E		   mov [es:bx+14],ax
+    220	    0110  B8 003Br		   mov ax,offset(EndData)
+    221	    0113  26: 89 47 10		   mov [es:bx+16],ax
+    222					 ; write startup message
+    223	    0117  BE 000E		   mov si,InitMsg1-InitMsg0
+    224	    011A  BF 003Br		   mov di,offset(InitMsg0)
+    225	    011D  E8 0054		   call	IssueMessage
+    226					 ; verify driver ddname
+    227	    0120  53			   push	bx ; save register
+    228	    0121  BB 000Ar		   mov bx,offset(hdrddn)
+Turbo Assembler	 Version 4.1	    09-05-15 18:44:15	    Page 5
 xsmouse.asm
 
 
 
-    229	    011D  07			   pop es ; restore register
-    230	    011E  BE 0025		   mov si,InitMsg3-InitMsg2
-    231	    0121  BF 006Ar		   mov di,offset(InitMsg2)
-    232	    0124  72 0E			   jc InitFailure ; error
-    233					 ; write success message
-    234	    0126  BE 0016		   mov si,InitMsg4-InitMsg3
-    235	    0129  BF 008Fr		   mov di,offset(InitMsg3)
-    236	    012C  E8 001B		   call	IssueMessage
-    237					 ; set success status code
-    238	    012F  B8 0100		   mov ax,0100h	; ok/done
-    239	    0132  EB 98			   jmp EndStrategy ; success
-    240	    0134			 label InitFailure near
-    241					 ; indicate init failure
-    242	    0134  2B C0			   sub ax,ax ; ensure zeroes
-    243	    0136  26: 88 47 0D		   mov [es:bx+13],al ; data byte
-    244	    013A  26: 89 47 0E		   mov [es:bx+14],ax ; code size
-    245	    013E  26: 89 47 10		   mov [es:bx+16],ax ; data size
-    246					 ; write failure message
-    247	    0142  E8 0005		   call	IssueMessage
-    248					 ; set failure status code
-    249	    0145  B8 8115		   mov ax,8115h	; error/done/quiet
-    250	    0148  EB 82			   jmp EndStrategy ; failure
-    251	    014A			 endp Initialize
-    252
-    253	    014A			 codeseg
-    254	    014A			 proc IssueMessage near
-    255					 ; issue message to stdout
-    256					   call	Dos16Write pascal,0,ds,di,si,ds,offset(Written)
-1   257	    014A  6A 00				 PUSH	 0
-1   258	    014C  1E				 PUSH	 DS
-1   259	    014D  57				 PUSH	 DI
-1   260	    014E  56				 PUSH	 SI
-1   261	    014F  1E				 PUSH	 DS
-1   262	    0150  68 00A5r			 PUSH	 OFFSET(WRITTEN)
-1   263	    0153  9A 00000000se			 CALL	 DOS16WRITE
-    264	    0158  C3			   ret ; return
-    265	    0159			 endp IssueMessage
+    229	    0124  BF 0028r		   mov di,offset(idcepi)
+    230	    0127  B2 2A			   mov dl,2Ah ;	attachdd
+    231	    0129  FF 1E	001Ar		   call	[devhlp] ; helper
+    232	    012D  5B			   pop bx ; restore register
+    233	    012E  BE 001C		   mov si,InitMsg2-InitMsg1
+    234	    0131  BF 0049r		   mov di,offset(InitMsg1)
+    235	    0134  73 28			   jnc InitFailure ; used
+    236					 ; allocate GDT	selector
+    237	    0136  06			   push	es ; save register
+    238	    0137  8E 06	001Er		   mov es,[gdtsel] ; selector
+    239	    013B  BF 001Er		   mov di,offset(gdtsel) ; offset
+    240	    013E  B2 2D			   mov dl,2Dh ;	allocgdtselector
+    241	    0140  B9 0001		   mov cx,0001h	; one selector
+    242	    0143  FF 1E	001Ar		   call	[devhlp] ; helper
+    243	    0147  07			   pop es ; restore register
+    244	    0148  BE 001C		   mov si,InitMsg3-InitMsg2
+    245	    014B  BF 0065r		   mov di,offset(InitMsg2)
+    246	    014E  72 0E			   jc InitFailure ; error
+    247					 ; write success message
+    248	    0150  BE 0016		   mov si,InitMsg4-InitMsg3
+    249	    0153  BF 0081r		   mov di,offset(InitMsg3)
+    250	    0156  E8 001B		   call	IssueMessage
+    251					 ; set success status code
+    252	    0159  B8 0100		   mov ax,0100h	; ok/done
+    253	    015C  EB 98			   jmp EndStrategy ; success
+    254	    015E			 label InitFailure near
+    255					 ; indicate init failure
+    256	    015E  2B C0			   sub ax,ax ; ensure zeroes
+    257	    0160  26: 88 47 0D		   mov [es:bx+13],al ; data byte
+    258	    0164  26: 89 47 0E		   mov [es:bx+14],ax ; code size
+    259	    0168  26: 89 47 10		   mov [es:bx+16],ax ; data size
+    260					 ; write failure message
+    261	    016C  E8 0005		   call	IssueMessage
+    262					 ; set failure status code
+    263	    016F  B8 8115		   mov ax,8115h	; error/done/quiet
+    264	    0172  EB 82			   jmp EndStrategy ; failure
+    265	    0174			 endp Initialize
     266
-    267					 end
-Turbo Assembler	 Version 4.1	    07-05-10 15:19:41	    Page 6
+    267	    0174			 codeseg
+    268	    0174			 proc IssueMessage near
+    269					 ; issue message to stdout
+    270					   call	Dos16Write pascal,0,ds,di,si,ds,offset(Written)
+1   271	    0174  6A 00				 PUSH	 0
+1   272	    0176  1E				 PUSH	 DS
+1   273	    0177  57				 PUSH	 DI
+1   274	    0178  56				 PUSH	 SI
+1   275	    0179  1E				 PUSH	 DS
+1   276	    017A  68 0097r			 PUSH	 OFFSET(WRITTEN)
+1   277	    017D  9A 00000000se			 CALL	 DOS16WRITE
+    278	    0182  C3			   ret ; return
+    279	    0183			 endp IssueMessage
+    280
+    281					 end
+Turbo Assembler	 Version 4.1	    09-05-15 18:44:15	    Page 6
 Symbol Table
 
 
@@ -298,9 +312,9 @@ Symbol Table
 
 Symbol Name			  Type	 Value
 
-??DATE				  Text	 "07-05-10"
+??DATE				  Text	 "09-05-15"
 ??FILENAME			  Text	 "xsmouse "
-??TIME				  Text	 "15:19:41"
+??TIME				  Text	 "18:44:15"
 ??VERSION			  Number 0401
 @32BIT				  Text	 0
 @CODE				  Text	 _TEXT
@@ -316,12 +330,13 @@ Symbol Name			  Type	 Value
 @WORDSIZE			  Text	 2
 DDNAME				  Byte	 DGROUP:0020
 DEVHLP				  Dword	 DGROUP:001A
+DONEISSUEIOREQUEST		  Near	 _TEXT:00A5
 DOS16WRITE			  Far	 ----:---- Extern
-ENDCODE				  Near	 _TEXT:00D1
-ENDDATA				  Byte	 DGROUP:0037
-ENDISSUEIOREQUEST		  Near	 _TEXT:008F
+ENDCODE				  Near	 _TEXT:00FB
+ENDDATA				  Byte	 DGROUP:003B
+ENDISSUEIOREQUEST		  Near	 _TEXT:00BE
 ENDREADENABLE			  Near	 _TEXT:0025
-ENDSTRATEGY			  Near	 _TEXT:00CC
+ENDSTRATEGY			  Near	 _TEXT:00F6
 GDTSEL				  Word	 DGROUP:001E
 HDRATR				  Word	 DGROUP:0004
 HDRDDN				  Byte	 DGROUP:000A
@@ -331,25 +346,26 @@ HDRRES				  Byte	 DGROUP:0012
 HDRSTR				  Word	 DGROUP:0006
 IDCENTRY			  Far	 _TEXT:0000
 IDCEPI				  Word	 DGROUP:0028
-INITFAILURE			  Near	 _TEXT:0134
-INITIALIZE			  Near	 _TEXT:00D1
-INITMSG0			  Byte	 DGROUP:0037
-INITMSG1			  Byte	 DGROUP:0045
-INITMSG2			  Byte	 DGROUP:006A
-INITMSG3			  Byte	 DGROUP:008F
-INITMSG4			  Byte	 DGROUP:00A5
+INITFAILURE			  Near	 _TEXT:015E
+INITIALIZE			  Near	 _TEXT:00FB
+INITMSG0			  Byte	 DGROUP:003B
+INITMSG1			  Byte	 DGROUP:0049
+INITMSG2			  Byte	 DGROUP:0065
+INITMSG3			  Byte	 DGROUP:0081
+INITMSG4			  Byte	 DGROUP:0097
 ISSUEIOREQUEST			  Near	 _TEXT:002B
-ISSUEMESSAGE			  Near	 _TEXT:014A
-NOTDOSREAD			  Near	 _TEXT:00C7
-NOTDOSWRITE			  Near	 _TEXT:00B4
-NOTISSUEIOREQUEST		  Near	 _TEXT:0094
-NOTPROCESSREAD			  Near	 _TEXT:0069
+ISSUEMESSAGE			  Near	 _TEXT:0174
+MOUSESEM			  Dword	 DGROUP:0037
+NOTDOSREAD			  Near	 _TEXT:00F1
+NOTDOSWRITE			  Near	 _TEXT:00DE
+NOTPROCESSREAD			  Near	 _TEXT:0082
 NOTREADENABLE			  Near	 _TEXT:0026
 PACKETOFFSET			  Word	 DGROUP:0034
 READENABLED			  Byte	 DGROUP:0036
-STRATEGY			  Far	 _TEXT:0095
-WRITTEN				  Word	 DGROUP:00A5
-Turbo Assembler	 Version 4.1	    07-05-10 15:19:41	    Page 7
+RELEASESEMAPHORE		  Near	 _TEXT:00AA
+STRATEGY			  Far	 _TEXT:00BF
+WRITTEN				  Word	 DGROUP:0097
+Turbo Assembler	 Version 4.1	    09-05-15 18:44:15	    Page 7
 Symbol Table
 
 
@@ -358,6 +374,6 @@ Symbol Table
 Groups & Segments		  Bit Size Align  Combine Class
 
 DGROUP				  Group
-  _DATA				  16  00A7 Word	  Public  DATA
-_TEXT				  16  0159 Word	  Public  CODE
+  _DATA				  16  0099 Word	  Public  DATA
+_TEXT				  16  0183 Word	  Public  CODE
 

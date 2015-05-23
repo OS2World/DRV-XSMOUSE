@@ -1,24 +1,20 @@
-
 ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿                            ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-³ Emulate Mouse Driver for OS/2 ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´ XSMOUSE00S.ZIP ³
+³ Emulate Mouse Driver for OS/2 ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´ XSMOUSE10S.ZIP ³
 ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ                            ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
 
  Provides a device driver to send absolute mouse events into the OS/2 system.
  It has been specifically designed to ease the development and integration of
  touch screen solutions into the OS/2 system. Made in Holland by Wim Brul.
 
- ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
- ³ Contains the source code of the Emulate Mouse Driver for OS/2.            ³
- ³ Contains 2 documentation files: xsmouse.doc (this file) and xsmouse.txt.  ³
- ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+ Contains the Source Code of the Emulate Mouse Driver for OS/2. Contains
+ getevent.cmd (read event example) and putevent.cmd (write event example).
+ Contains 2 documentation files: xsmouse.doc (this file) and xsmouse.txt.
 
- May be freely used and exchanged. May be modified to suit your own individual
- needs and purposes. You may use this product solely at your own risk. I cannot
- be held responsible for any damages occurring due to your using this product.
- You may not lease, rent or sell this product to any other party. Have fun.
+³Open Source product with its ISC license contained in the LICENSE file.
+³Source Code at http://home.hccnet.nl/w.m.brul/emumouse/xsmouse10s.zip
 
 ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿                                     ÚÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-³ source code description ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´ xsmouse.doc ³
+³ Source Code Description ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´ xsmouse.doc ³
 ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ                                     ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
 
  The Emulate Mouse Driver for OS/2 is a 16 bit OS/2 device driver.
@@ -28,33 +24,33 @@
 
  It consists of the following files:
 
- xsmouse.asm
- xsmouse.def
- xsmouse.lst
- xsmouse.mak
- xsmouse.map
- xsmouse.obj
- xsmouse.sys
+  xsmouse.asm - source code
+  xsmouse.def - definition file
+  xsmouse.lst - listing file
+  xsmouse.mak - make file
+  xsmouse.map - map file
+  xsmouse.obj - object code
+  xsmouse.sys - device driver
 
 ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿                                   ÚÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-³ device driver description ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´ xsmouse.txt ³
+³ Device Driver Description ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´ xsmouse.txt ³
 ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ                                   ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
 
  Contains the - Emulate Mouse Driver for OS/2 - User Manual.
 
-ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿                                       ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-³ 1st sample procedure ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´ getevent.cmd ³
-ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ                                       ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿                                      ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ 1st Example Procedure ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´ getevent.cmd ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ                                      ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
 
- This sample procedure demonstrates how the OS/2 Procedure Language 2/REXX
+ This example procedure demonstrates how the OS/2 Procedure Language 2/REXX
  stream functions may be used to read the last pointing device event from the
  common event buffer.
 
-ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿                                       ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-³ 2nd sample procedure ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´ putevent.cmd ³
-ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ                                       ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿                                      ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+³ 2nd Example Procedure ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´ putevent.cmd ³
+ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ                                      ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
 
- This sample procedure demonstrates how the OS/2 Procedure Language 2/REXX
+ This example procedure demonstrates how the OS/2 Procedure Language 2/REXX
  stream functions may be used to write the absolute pointing device event that
  moves the pointer to the center of the screen into the common event buffer.
 

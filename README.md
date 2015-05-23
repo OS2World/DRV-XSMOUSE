@@ -5,7 +5,7 @@ Send absolute mouse events into the OS/2 system.
 
 LICENSE
 ===============
-* Non Comercial use. 
+* Open Source - ISC License
 
 COMPILE TOOLS
 ===============

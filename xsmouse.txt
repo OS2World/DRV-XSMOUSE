@@ -1,6 +1,5 @@
-
 ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿                             ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-³ Emulate Mouse Driver for OS/2 ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´ XSMOUSE00.ZIP ³
+³ Emulate Mouse Driver for OS/2 ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´ XSMOUSE10.ZIP ³
 ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ                             ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
 
  Provides a device driver to send absolute mouse events into the OS/2 system.
@@ -10,10 +9,8 @@
  Consists of XSMOUSE.TXT (this text file) and XSMOUSE.SYS (the device driver),
  GETEVENT.CMD (a read event example) and PUTEVENT.CMD (a write event example).
 
- May be freely used and exchanged, as long as it is not modified. You may
- use this product solely at your own risk. I cannot be held responsible for
- any damages occurring due to your using this product. You may not lease,
- rent or sell this product to any other party. Have fun.
+³Open Source product with its ISC license contained in the LICENSE file.
+³Source Code at http://home.hccnet.nl/w.m.brul/emumouse/xsmouse10s.zip
 
 ÚÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 ³ Description ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
@@ -29,11 +26,13 @@
 ³ Installation ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
 ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
 
- Move the XSMOUSE00.ZIP file into a directory of your choice and unzip it.
- Copy the XSMOUSE.SYS file to your C:\OS2\BOOT directory.
- Modify your CONFIG.SYS file to contain DEVICE=C:\OS2\BOOT\XSMOUSE.SYS and
- DEVICE=C:\OS2\BOOT\MOUSE.SYS STYPE=XSMOUSE$ statements in that order and
- restart your system. XSMOUSE$ will be the device driver name to be used.
+ Move the XSMOUSE10.ZIP file into a directory of your choice and unzip it.
+ Copy the XSMOUSE.SYS device driver to your C:\OS2\BOOT directory. Look into
+ your CONFIG.SYS file to determine which mouse device driver has been installed
+ on your system. You may find AMOUSE.SYS or MOUSE.SYS and you need to add the
+ STYPE=XSMOUSE$ parameter to that device driver statement and to insert the
+ DEVICE=C:\OS2\BOOT\XSMOUSE.SYS device driver statement just above it. Restart
+ your system. After that XSMOUSE$ will be the device driver name to be used.
 
 ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 ³ Common Event Buffer ÃÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ
@@ -110,10 +109,7 @@
 
  rc=stream(sName,'command','open');
 
- Opens the device driver with read/write access for this process and denies
- read/write access to all other processes as required by the device driver.
- The device driver relies on standard file system access and sharing rules
- for contention control and does not use the notification of the open.
+ Opens the device driver for read/write access with this process.
 
  sName - Name of the device driver to be opened.
 
@@ -153,9 +149,7 @@
 
  rc=stream(sName,'command','close');
 
- Closes the device driver and allows read/write access to other processes.
- The device driver relies on standard file system access and sharing rules
- for contention control and does not use the notification of the close.
+ Closes the device driver for read/write access with this process.
 
  sName - Name of the device driver to be closed.
 
@@ -180,10 +174,7 @@
 
  ulrc=DosOpen(pszName,phDevice,pulAction,0,0,1,18,0);
 
- Opens the device driver with read/write access for this process and denies
- read/write access to all other processes as required by the device driver.
- The device driver relies on standard file system access and sharing rules
- for contention control and does not use the notification of the open.
+ Opens the device driver for read/write access with this process.
 
  pszName - Address of the asciiz name of the device driver to be opened.
 
@@ -234,9 +225,7 @@
 
  ulrc=DosClose(hDevice);
 
- Closes the device driver and allows read/write access to other processes.
- The device driver relies on standard file system access and sharing rules
- for contention control and does not use the notification of the close.
+ Closes the device driver for read/write access with this process.
 
  hDevice - The device handle obtained from a previous call to DosOpen.
 
